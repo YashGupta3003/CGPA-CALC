@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CGPA Calculator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 30px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-size: 16px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 2.2em;
+            color: #2c3e50;
+            margin: 0;
+        }
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+        .logout-btn:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+        }
+        .semester {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.08);
+            margin: 25px 0;
+            padding: 30px;
+        }
+        .semester h2 {
+            font-size: 1.8em;
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .course-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+        .course-table th {
+            background-color: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .course-table td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .add-form {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .add-form input, .add-form select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1.1em;
+        }
+        .add-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+        .add-btn:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+            transform: translateY(-1px);
+        }
+        .total-credits {
+            font-size: 1.4em;
+            color: #2c3e50;
+            margin: 20px 0;
+        }
+        .grade-select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            min-width: 120px;
+        }
+        .grade-select:hover {
+            border-color: #4285f4;
+        }
+        .semester-gpa {
+            font-size: 1.8em;
+            color: #2c3e50;
+            margin: 20px 0;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: inline-block;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .semester-gpa:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .semester-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            padding: 10px 0;
+            border-top: 1px solid #eee;
+        }
+        .overall-cgpa {
+            font-size: 2.2em;
+            color: #2c3e50;
+            text-align: center;
+            margin: 20px 0;
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .overall-cgpa:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome, {{ current_user.name }}</h1>
+        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    </div>
+
+    <div class="overall-cgpa">
+        Overall CGPA: {{ "%.2f"|format(calculate_gpa(all_courses)) }}
+    </div>
+
+    <div class="add-form">
+        <form action="{{ url_for('add_semester') }}" method="POST">
+            <input type="number" name="semester_number" required placeholder="Semester Number">
+            <button type="submit" class="add-btn">Add Semester</button>
+        </form>
+    </div>
+
+    {% for semester in semesters %}
+    <div class="semester">
+        <h2>Semester {{ semester.semester_number }}</h2>
+        
+        <form action="{{ url_for('add_course', semester_id=semester.id) }}" method="POST" class="add-form">
+            <input type="text" name="name" required placeholder="Course Name">
+            <input type="number" name="credits" step="0.5" min="0.5" max="25" required placeholder="Credits">
+            <select name="grade" required>
+                <option value="A">A (10)</option>
+                <option value="A-">A- (9)</option>
+                <option value="B">B (8)</option>
+                <option value="B-">B- (7)</option>
+                <option value="C">C (6)</option>
+                <option value="C-">C- (5)</option>
+                <option value="D">D (4)</option>
+                <option value="F">F (0)</option>
+            </select>
+            <button type="submit" class="add-btn">Add Course</button>
+        </form>
+
+        <table class="course-table">
+            <thead>
+                <tr>
+                    <th>Course Name</th>
+                    <th>Credits</th>
+                    <th>Grade</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for course in semester.courses %}
+                <tr>
+                    <td>{{ course.name }}</td>
+                    <td>{{ course.credits }}</td>
+                    <td>
+                        <form action="{{ url_for('update_grade', course_id=course.id) }}" method="POST" class="grade-form">
+                            <select name="grade" class="grade-select" onchange="this.form.submit()">
+                                <option value="A" {% if course.grade == 'A' %}selected{% endif %}>A (10)</option>
+                                <option value="A-" {% if course.grade == 'A-' %}selected{% endif %}>A- (9)</option>
+                                <option value="B" {% if course.grade == 'B' %}selected{% endif %}>B (8)</option>
+                                <option value="B-" {% if course.grade == 'B-' %}selected{% endif %}>B- (7)</option>
+                                <option value="C" {% if course.grade == 'C' %}selected{% endif %}>C (6)</option>
+                                <option value="C-" {% if course.grade == 'C-' %}selected{% endif %}>C- (5)</option>
+                                <option value="D" {% if course.grade == 'D' %}selected{% endif %}>D (4)</option>
+                                <option value="F" {% if course.grade == 'F' %}selected{% endif %}>F (0)</option>
+                            </select>
+                        </form>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('delete_course', course_id=course.id) }}" class="delete-btn">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="semester-stats">
+            <div class="total-credits">
+                Total Credits: {{ semester.courses|sum(attribute='credits') }}/25
+            </div>
+            <div class="semester-gpa">
+                Semester GPA: {{ calculate_gpa(semester.courses) }}
+            </div>
+        </div>
+        
+        <a href="{{ url_for('delete_semester', semester_id=semester.id) }}" class="delete-btn">Delete Semester</a>
+    </div>
+    {% endfor %}
+</body>
+</html> 
